@@ -1,0 +1,53 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ringOrange" x1="36" y1="26" x2="436" y2="470" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFB64D"/>
+      <stop offset="1" stop-color="#F57C20"/>
+    </linearGradient>
+    <linearGradient id="darkBlue" x1="110" y1="96" x2="420" y2="410" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B3E95"/>
+      <stop offset="1" stop-color="#0A2D72"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="256" cy="256" r="220" fill="#0D4B9E"/>
+  <circle cx="256" cy="256" r="190" fill="#FFFFFF"/>
+
+  <g opacity="0.95">
+    <path d="M60 256C60 132.4 152.4 40 276 40H307C298 56 287 77 280 98C218 108 175 117 126 162C95 192 74 226 60 256Z" fill="url(#ringOrange)"/>
+    <path d="M452 256C452 379.6 359.6 472 236 472H205C214 456 225 435 232 414C294 404 337 395 386 350C417 320 438 286 452 256Z" fill="url(#ringOrange)"/>
+    <path d="M72 206C102 176 145 146 168 130C176 175 167 231 123 263C94 286 68 293 42 295C48 270 58 234 72 206Z" fill="#F6931D"/>
+    <path d="M440 206C410 176 367 146 344 130C336 175 345 231 389 263C418 286 444 293 470 295C464 270 454 234 440 206Z" fill="#F6931D"/>
+  </g>
+
+  <g>
+    <path d="M108 332C142 300 191 278 227 279C233 279 239 279 245 281C213 318 196 352 195 389H132C121 370 112 350 108 332Z" fill="#0E4CA7"/>
+    <path d="M157 275C180 260 214 247 247 245C275 243 304 250 326 267C322 300 289 324 251 328C211 333 175 309 157 275Z" fill="#0E4CA7"/>
+    <path d="M171 389H419C433 389 445 401 445 415V425C445 440 434 451 419 451H164C154 451 145 442 145 431V422C145 401 158 389 171 389Z" fill="#0E4CA7"/>
+  </g>
+
+  <g>
+    <path d="M180 196C197 170 219 154 249 144C279 134 311 134 339 148C358 158 374 174 387 196L375 359H192L180 196Z" fill="#F4F8FF"/>
+    <path d="M204 206H380V220H204V206ZM208 239H376V253H208V239ZM212 273H372V287H212V273ZM216 307H368V320H216V307Z" fill="#0B3E95"/>
+    <path d="M230 143C242 126 258 110 276 99C294 110 310 126 322 143C304 156 290 170 276 185C262 170 248 156 230 143Z" fill="#F4F8FF"/>
+    <path d="M196 164L273 230L209 230L196 164Z" fill="#0B3E95" fill-opacity="0.15"/>
+    <path d="M355 164L278 230L342 230L355 164Z" fill="#0B3E95" fill-opacity="0.15"/>
+  </g>
+
+  <g>
+    <path d="M255 152C220 139 188 144 164 165C154 172 145 181 138 191C160 191 178 196 201 211C222 225 236 245 243 268C250 245 264 225 286 211C309 196 327 191 349 191C342 181 333 172 323 165C298 144 266 139 255 152Z" fill="#F4F8FF"/>
+    <path d="M273 178C279 144 308 120 344 107C351 122 350 136 340 148C329 160 311 165 286 176L273 178Z" fill="#0B3E95"/>
+    <path d="M239 178C233 144 204 120 168 107C161 122 162 136 172 148C183 160 201 165 226 176L239 178Z" fill="#0B3E95"/>
+  </g>
+
+  <g>
+    <path d="M176 434C183 403 199 378 216 358C236 334 269 320 305 320C348 320 382 338 406 371C423 394 434 421 442 454L350 471C345 454 336 438 322 424C305 408 285 400 262 400C238 400 219 409 203 425C191 436 181 452 176 434Z" fill="#F9B448"/>
+    <path d="M191 454H419C428 454 435 460 435 468V470C435 477 429 483 421 483H188C181 483 175 477 175 470V468C175 460 182 454 191 454Z" fill="#F7A92D"/>
+  </g>
+
+  <g>
+    <text x="256" y="86" text-anchor="middle" font-family="Georgia, serif" font-size="30" font-weight="700" fill="#0E4CA7" letter-spacing="1.5">विद्यार्थी सहायक समिति</text>
+    <text x="256" y="438" text-anchor="middle" font-family="Georgia, serif" font-size="26" font-weight="700" fill="#0E4CA7" letter-spacing="1.5">सेवा, शिक्षा, युवा विकास</text>
+    <text x="256" y="472" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#F57C20">TM</text>
+  </g>
+</svg>
