@@ -977,6 +977,47 @@ textarea {
   background: #f8fbff;
 }
 
+.palak-photo-review {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid #e1eaf7;
+  border-radius: 14px;
+  background: #f8fbff;
+}
+
+.palak-photo-review-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #52657b;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.palak-photo-review-header a {
+  color: #0d4b9e;
+  font-size: 0.8rem;
+  text-transform: none;
+}
+
+.palak-photo-review img {
+  display: block;
+  width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+  border-radius: 10px;
+  background: #e8eef8;
+}
+
+.photo-missing-message {
+  margin: 0;
+  color: #a21818;
+  line-height: 1.5;
+}
+
 .review-detail span {
   color: #52657b;
   font-size: 0.78rem;

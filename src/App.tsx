@@ -1749,6 +1749,13 @@ function PalakDashboard({ submissions, onGradeUpdate }: { submissions: Submitted
           <ReviewDetail label="Meeting date" value={selectedSubmission.values.palak_meeting_date} />
           <ReviewDetail label="Discussion notes" value={selectedSubmission.values.palak_discussion_notes} />
           <ReviewDetail label="Location" value={selectedSubmission.values.palak_geo_lat && selectedSubmission.values.palak_geo_long ? `${selectedSubmission.values.palak_geo_lat}, ${selectedSubmission.values.palak_geo_long}` : 'Not captured'} />
+          <div className="palak-photo-review">
+            <div className="palak-photo-review-header">
+              <span>Meeting photo</span>
+              {selectedSubmission.values.palak_photo ? <a href={selectedSubmission.values.palak_photo} target="_blank" rel="noreferrer">Open full size</a> : null}
+            </div>
+            {selectedSubmission.values.palak_photo ? <img src={selectedSubmission.values.palak_photo} alt={`${selectedSubmission.studentName}'s Palak meeting`} /> : <p className="photo-missing-message">No meeting photo was submitted. Keep verification pending or mark it disputed.</p>}
+          </div>
           <label>Verification status<select value={selectedSubmission.grades.palak ?? 'Pending'} onChange={(event) => onGradeUpdate(selectedSubmission.id, 'palak', event.target.value)}><option>Pending</option><option>Verified</option><option>Disputed</option></select></label>
         </div> : <div className="student-empty-state"><h4>Select a student</h4><p>Choose a submitted record to verify the Palak meeting.</p></div>}
       </section>
