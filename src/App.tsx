@@ -1728,7 +1728,7 @@ function HeadDashboard({ title, section, submissions, onGradeUpdate }: { title: 
 }
 
 function PalakDashboard({ submissions, onGradeUpdate }: { submissions: SubmittedAvlokan[]; onGradeUpdate: (submissionId: string, section: ReviewSection, grade: string) => void }) {
-  const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(submissions[0]?.id ?? null)
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null)
   const selectedSubmission = submissions.find((submission) => submission.id === selectedSubmissionId)
 
   return (
