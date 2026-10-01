@@ -919,9 +919,66 @@ textarea {
 }
 
 .submission-list,
-.review-student-list {
+.review-student-list,
+.notification-list {
   display: grid;
   gap: 12px;
+}
+
+.notification-item {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid #dfeafc;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #111111;
+  text-align: left;
+}
+
+.notification-item:hover {
+  border-color: #8fb4e8;
+  background: #f8fbff;
+}
+
+.notification-item.unread {
+  border-color: #9fc0ee;
+  background: #edf4ff;
+}
+
+.notification-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.notification-item.unread .notification-dot {
+  background: #0d4b9e;
+}
+
+.notification-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.notification-copy span,
+.notification-copy small {
+  color: #52657b;
+}
+
+.notification-copy small {
+  font-size: 0.76rem;
+}
+
+.notification-action {
+  color: #0d4b9e;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .submission-card,

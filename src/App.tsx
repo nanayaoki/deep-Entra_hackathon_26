@@ -70,6 +70,7 @@ type AccountFormState = {
 
 type StudentView = 'profile' | 'avlokan' | 'previous' | 'complaint'
 type RectorView = 'students' | 'review' | 'defaulters' | 'analysis'
+type NotificationKind = 'monthly-reminder' | 'submission'
 
 type AttendanceRecord = {
   id: string
@@ -165,10 +166,27 @@ type SubmittedAvlokan = {
   rectorRemarks?: string
 }
 
+type AppNotification = {
+  id: string
+  userId: number
+  title: string
+  message: string
+  createdAt: string
+  read: boolean
+  kind: NotificationKind
+  link: 'avlokan' | 'review'
+}
+
 const submissionsStorageKey = 'vss-avlokan-submissions'
 const yogaAttendanceStorageKey = 'vss-yoga-attendance'
 const messAttendanceStorageKey = 'vss-mess-attendance'
 const vvkAttendanceStorageKey = 'vss-vvk-attendance'
+const notificationsStorageKey = 'vss-avlokan-notifications'
+
+const getCurrentCycle = () => {
+  const now = new Date()
+  return { month: now.toLocaleString('en-US', { month: 'long' }), year: now.getFullYear() }
+}
 
 const loadStoredSubmissions = (): SubmittedAvlokan[] => {
   const storedSubmissions = window.localStorage.getItem(submissionsStorageKey)
@@ -211,6 +229,17 @@ const loadStoredVvkAttendance = (): VvkAttendance[] => {
   try {
     const parsedAttendance = JSON.parse(storedAttendance) as VvkAttendance[]
     return Array.isArray(parsedAttendance) ? parsedAttendance : []
+  } catch {
+    return []
+  }
+}
+
+const loadStoredNotifications = (): AppNotification[] => {
+  const storedNotifications = window.localStorage.getItem(notificationsStorageKey)
+  if (!storedNotifications) return []
+  try {
+    const parsedNotifications = JSON.parse(storedNotifications) as AppNotification[]
+    return Array.isArray(parsedNotifications) ? parsedNotifications : []
   } catch {
     return []
   }
@@ -285,6 +314,8 @@ function App() {
   const [yogaAttendance, setYogaAttendance] = useState<AttendanceRecord[]>(loadStoredYogaAttendance)
   const [messAttendance, setMessAttendance] = useState<AttendanceRecord[]>(() => loadStoredAttendance(messAttendanceStorageKey))
   const [vvkAttendance, setVvkAttendance] = useState<VvkAttendance[]>(loadStoredVvkAttendance)
+  const [notifications, setNotifications] = useState<AppNotification[]>(loadStoredNotifications)
+  const [queueOpen, setQueueOpen] = useState(false)
 
   useEffect(() => {
     window.localStorage.setItem(accountsStorageKey, JSON.stringify(accounts))
@@ -305,6 +336,59 @@ function App() {
   useEffect(() => {
     window.localStorage.setItem(vvkAttendanceStorageKey, JSON.stringify(vvkAttendance))
   }, [vvkAttendance])
+
+  useEffect(() => {
+    window.localStorage.setItem(notificationsStorageKey, JSON.stringify(notifications))
+  }, [notifications])
+
+  useEffect(() => {
+    const now = new Date()
+    const cycle = getCurrentCycle()
+    const nextNotifications: AppNotification[] = []
+
+    if (now.getDate() >= 28) {
+      accounts.filter((account) => account.role === 'Student').forEach((student) => {
+        const hasSubmitted = submissions.some(
+          (submission) => submission.studentId === student.id && submission.month === cycle.month && submission.year === cycle.year,
+        )
+        const notificationId = `monthly-reminder-${student.id}-${cycle.year}-${cycle.month}`
+        if (!hasSubmitted && !notifications.some((notification) => notification.id === notificationId)) {
+          nextNotifications.push({
+            id: notificationId,
+            userId: student.id,
+            title: 'Monthly Avlokan reminder',
+            message: `Please complete and submit your ${cycle.month} ${cycle.year} Avlokan.`,
+            createdAt: now.toISOString(),
+            read: false,
+            kind: 'monthly-reminder',
+            link: 'avlokan',
+          })
+        }
+      })
+    }
+
+    accounts.filter((account) => account.role !== 'Student').forEach((reviewer) => {
+      submissions.forEach((submission) => {
+        const notificationId = `submission-${reviewer.id}-${submission.id}`
+        if (!notifications.some((notification) => notification.id === notificationId)) {
+          nextNotifications.push({
+            id: notificationId,
+            userId: reviewer.id,
+            title: 'Avlokan ready for grading',
+            message: `${submission.studentName} submitted ${submission.month} ${submission.year} Avlokan for grading.`,
+            createdAt: submission.submittedAt,
+            read: false,
+            kind: 'submission',
+            link: 'review',
+          })
+        }
+      })
+    })
+
+    if (nextNotifications.length > 0) {
+      setNotifications((current) => [...nextNotifications, ...current])
+    }
+  }, [accounts, notifications, submissions])
 
   const currentRole = session?.role ?? 'Student'
 
@@ -331,6 +415,7 @@ function App() {
     setSession(user)
     setAuthError('')
     setStudentView('profile')
+    setQueueOpen(false)
     setStudentProfile(loadStoredStudentProfiles()[String(user.id)] ?? emptyStudentProfile)
     setProfileMessage('')
     setRoute('dashboard')
@@ -339,6 +424,7 @@ function App() {
   const handleLogout = () => {
     setSession(null)
     setRoute('home')
+    setQueueOpen(false)
   }
 
   const handleProfileSave = (event: React.FormEvent<HTMLFormElement>) => {
@@ -386,8 +472,7 @@ function App() {
       id: `${session.id}-${Date.now()}`,
       studentId: session.id,
       studentName: session.name,
-      month: 'September',
-      year: 2026,
+      ...getCurrentCycle(),
       submittedAt: new Date().toISOString(),
       status: 'Submitted',
       values,
@@ -395,6 +480,19 @@ function App() {
     }
 
     setSubmissions((current) => [submission, ...current.filter((item) => item.studentId !== session.id)])
+  }
+
+  const handleNotificationRead = (notificationId: string) => {
+    setNotifications((current) => current.map((notification) =>
+      notification.id === notificationId ? { ...notification, read: true } : notification,
+    ))
+  }
+
+  const handleNotificationOpen = (notification: AppNotification) => {
+    handleNotificationRead(notification.id)
+    setQueueOpen(false)
+    if (notification.link === 'avlokan' && session?.role === 'Student') setStudentView('avlokan')
+    if (notification.link === 'review' && session?.role === 'Rector') setRectorView('review')
   }
 
   const handleGradeUpdate = (submissionId: string, section: ReviewSection, grade: string) => {
@@ -740,13 +838,17 @@ function App() {
                     Overview
                   </button>
                   <button type="button" className="nav-button">
-                    My queue
-                  </button>
-                  <button type="button" className="nav-button">
                     Six-month view
                   </button>
                 </>
               )}
+              <button
+                type="button"
+                className={`nav-button ${queueOpen ? 'active' : ''}`}
+                onClick={() => setQueueOpen(true)}
+              >
+                My queue{notifications.filter((notification) => notification.userId === session.id && !notification.read).length > 0 ? ` (${notifications.filter((notification) => notification.userId === session.id && !notification.read).length})` : ''}
+              </button>
               <button type="button" className="nav-button" onClick={handleLogout}>
                 Sign out
               </button>
@@ -764,66 +866,104 @@ function App() {
               </button>
             </header>
 
-            {currentRole === 'Admin' && (
-              <AdminDashboard
-                accounts={accounts}
-                accountForm={accountForm}
-                editingAccountId={editingAccountId}
-                accountMessage={accountMessage}
-                onFieldChange={(field, value) =>
-                  setAccountForm((current) => ({ ...current, [field]: value }))
-                }
-                onSubmit={handleAccountSubmit}
-                onEdit={handleEditAccount}
-                onDelete={handleDeleteAccount}
-                onReset={resetAccountForm}
-              />
-            )}
-            {currentRole === 'Rector' && (
-              <RectorDashboard
-                view={rectorView}
-                accounts={accounts}
-                profiles={loadStoredStudentProfiles()}
-                submissions={submissions}
-                yogaAttendance={yogaAttendance}
-                messAttendance={messAttendance}
-                vvkAttendance={vvkAttendance}
-                onReviewSave={handleRectorReviewSave}
-              />
-            )}
-            {currentRole === 'Student' && (
-              <StudentDashboard
-                view={studentView}
-                profile={studentProfile}
-                profileMessage={profileMessage}
-                complaint={complaint}
-                complaintMessage={complaintMessage}
-                onProfileChange={(field, value) => {
-                  setStudentProfile((current) => ({ ...current, [field]: value }))
-                  setProfileMessage('')
-                }}
-                onProfileImage={handleProfileImage}
-                onProfileSave={handleProfileSave}
-                onComplaintChange={(value) => {
-                  setComplaint(value)
-                  setComplaintMessage('')
-                }}
-                onComplaintSubmit={handleComplaintSubmit}
-                submissions={submissions.filter((submission) => submission.studentId === session.id)}
-                onAvlokanSubmit={handleAvlokanSubmit}
-              />
-            )}
-            {currentRole === 'Department Head' && <HeadDashboard title="Department Head" section="work" submissions={submissions} onGradeUpdate={handleGradeUpdate} />}
-            {currentRole === 'Yoga Head' && <AttendanceHeadDashboard subject="Yoga" attendance={yogaAttendance} onAttendanceSave={handleYogaAttendanceSave} />}
-            {currentRole === 'Earn & Learn Head' && <HeadDashboard title="Earn & Learn Head" section="earn" submissions={submissions} onGradeUpdate={handleGradeUpdate} />}
-            {currentRole === 'VVK Head' && <VvkHeadDashboard attendance={vvkAttendance} onAttendanceSave={handleVvkAttendanceSave} />}
-            {currentRole === 'Mess Head' && <AttendanceHeadDashboard subject="Mess" attendance={messAttendance} onAttendanceSave={handleMessAttendanceSave} />}
-            {currentRole === 'Wing Head' && <HeadDashboard title="Wing Head" section="block" submissions={submissions} onGradeUpdate={handleGradeUpdate} />}
-            {currentRole === 'Palak Head' && <PalakDashboard submissions={submissions} onGradeUpdate={handleGradeUpdate} />}
+            {queueOpen ? <NotificationQueue
+              notifications={notifications.filter((notification) => notification.userId === session.id)}
+              onOpen={handleNotificationOpen}
+            /> : <>
+              {currentRole === 'Admin' && (
+                <AdminDashboard
+                  accounts={accounts}
+                  accountForm={accountForm}
+                  editingAccountId={editingAccountId}
+                  accountMessage={accountMessage}
+                  onFieldChange={(field, value) =>
+                    setAccountForm((current) => ({ ...current, [field]: value }))
+                  }
+                  onSubmit={handleAccountSubmit}
+                  onEdit={handleEditAccount}
+                  onDelete={handleDeleteAccount}
+                  onReset={resetAccountForm}
+                />
+              )}
+              {currentRole === 'Rector' && (
+                <RectorDashboard
+                  view={rectorView}
+                  accounts={accounts}
+                  profiles={loadStoredStudentProfiles()}
+                  submissions={submissions}
+                  yogaAttendance={yogaAttendance}
+                  messAttendance={messAttendance}
+                  vvkAttendance={vvkAttendance}
+                  onReviewSave={handleRectorReviewSave}
+                />
+              )}
+              {currentRole === 'Student' && (
+                <StudentDashboard
+                  view={studentView}
+                  profile={studentProfile}
+                  profileMessage={profileMessage}
+                  complaint={complaint}
+                  complaintMessage={complaintMessage}
+                  onProfileChange={(field, value) => {
+                    setStudentProfile((current) => ({ ...current, [field]: value }))
+                    setProfileMessage('')
+                  }}
+                  onProfileImage={handleProfileImage}
+                  onProfileSave={handleProfileSave}
+                  onComplaintChange={(value) => {
+                    setComplaint(value)
+                    setComplaintMessage('')
+                  }}
+                  onComplaintSubmit={handleComplaintSubmit}
+                  submissions={submissions.filter((submission) => submission.studentId === session.id)}
+                  onAvlokanSubmit={handleAvlokanSubmit}
+                />
+              )}
+              {currentRole === 'Department Head' && <HeadDashboard title="Department Head" section="work" submissions={submissions} onGradeUpdate={handleGradeUpdate} />}
+              {currentRole === 'Yoga Head' && <AttendanceHeadDashboard subject="Yoga" attendance={yogaAttendance} onAttendanceSave={handleYogaAttendanceSave} />}
+              {currentRole === 'Earn & Learn Head' && <HeadDashboard title="Earn & Learn Head" section="earn" submissions={submissions} onGradeUpdate={handleGradeUpdate} />}
+              {currentRole === 'VVK Head' && <VvkHeadDashboard attendance={vvkAttendance} onAttendanceSave={handleVvkAttendanceSave} />}
+              {currentRole === 'Mess Head' && <AttendanceHeadDashboard subject="Mess" attendance={messAttendance} onAttendanceSave={handleMessAttendanceSave} />}
+              {currentRole === 'Wing Head' && <HeadDashboard title="Wing Head" section="block" submissions={submissions} onGradeUpdate={handleGradeUpdate} />}
+              {currentRole === 'Palak Head' && <PalakDashboard submissions={submissions} onGradeUpdate={handleGradeUpdate} />}
+            </>}
           </main>
         </div>
       )}
     </div>
+  )
+}
+
+function NotificationQueue({ notifications, onOpen }: { notifications: AppNotification[]; onOpen: (notification: AppNotification) => void }) {
+  return (
+    <section className="panel panel-wide notification-queue">
+      <div className="panel-header">
+        <div>
+          <p className="eyebrow">Action center</p>
+          <h3>My queue</h3>
+        </div>
+        <span className="status-chip">{notifications.filter((notification) => !notification.read).length} unread</span>
+      </div>
+      {notifications.length === 0 ? <div className="student-empty-state">
+        <h4>Your queue is clear</h4>
+        <p>New reminders and submitted Avlokan records will appear here.</p>
+      </div> : <div className="notification-list">
+        {notifications.map((notification) => <button
+          type="button"
+          className={`notification-item ${notification.read ? '' : 'unread'}`}
+          key={notification.id}
+          onClick={() => onOpen(notification)}
+        >
+          <span className="notification-dot" aria-hidden="true" />
+          <span className="notification-copy">
+            <strong>{notification.title}</strong>
+            <span>{notification.message}</span>
+            <small>{new Date(notification.createdAt).toLocaleString()}</small>
+          </span>
+          <span className="notification-action">Open</span>
+        </button>)}
+      </div>}
+    </section>
   )
 }
 
